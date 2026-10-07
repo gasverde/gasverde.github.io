@@ -17,7 +17,7 @@
       --gv-lima-escuro: #5fd04c;
       --branco: #ffffff;
       --texto: #0f2f2a;
-      --texto-suave: #1d3330;
+      --texto-suave: #243b37;
       --borda: #d5e3df;
       --erro: #d93636;
       --raio: 12px;
@@ -63,7 +63,9 @@
     .video-fundo.pronto { opacity: 1; }
     .video-veu {
       position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(1,46,39,.35) 0%, rgba(1,46,39,.55) 100%);
+      background:
+        radial-gradient(ellipse at center, rgba(1,46,39,0) 35%, rgba(1,30,25,.55) 100%),
+        linear-gradient(180deg, rgba(1,46,39,.30) 0%, rgba(1,46,39,.50) 100%);
     }
     /* Símbolo da marca em marca d'água */
     .marca-dagua {
@@ -95,13 +97,15 @@
     .boas-vindas h1 { color: var(--texto); }
     .boas-vindas h1 span { color: var(--gv-verde); }
     .boas-vindas .logo-cartao { width: 230px; max-width: 70%; margin: 0 auto 22px; display: block; }
-    .boas-vindas p { color: var(--texto-suave); font-size: 1.05rem; margin-bottom: 34px; line-height: 1.5; }
+    .boas-vindas p { color: var(--texto-suave); font-size: 1.05rem; margin-bottom: 26px; line-height: 1.5; }
+    .boas-vindas p strong { color: var(--gv-verde-escuro); font-weight: 700; }
 
     .chips { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
     .chip {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 7px 12px; border-radius: 999px; font-size: .85rem;
-      background: rgba(1,117,98,.08); border: 1px solid rgba(1,117,98,.22); color: var(--gv-verde);
+      background: rgba(255,255,255,.72); border: 1px solid rgba(1,117,98,.35); color: var(--gv-verde-escuro);
+      font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,.08);
     }
     .chip svg { width: 15px; height: 15px; }
 
@@ -120,29 +124,47 @@
     .btn-primario:active { transform: scale(.98); }
     .btn-primario:disabled { opacity: .7; cursor: wait; }
     .pulsar { animation: pulsar 2.4s ease-in-out infinite; }
+    .btn-brilho { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-brilho::before {
+      content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent);
+      transform: skewX(-20deg); animation: brilho 3.2s ease-in-out infinite;
+    }
+    @keyframes brilho { 0%, 55% { left: -60%; } 100% { left: 130%; } }
+    .btn-brilho .seta { width: 20px; height: 20px; transition: transform .2s ease; }
+    .btn-brilho:hover { transform: translateY(-2px); background: #015d4e; }
+    .btn-brilho:hover .seta { transform: translateX(5px); }
+    @media (prefers-reduced-motion: reduce) { .btn-brilho::before { animation: none; } }
     @keyframes pulsar { 0%,100% { box-shadow: 0 10px 24px rgba(1,117,98,.32); } 50% { box-shadow: 0 10px 34px rgba(130,237,112,.75); } }
 
     .btn-secundario {
       background: transparent; color: var(--texto-suave); border: 1.5px solid var(--borda);
       margin-top: 10px; font-weight: 600;
     }
-    .btn-secundario { background: rgba(255,255,255,.5); }
+    .btn-secundario { background: rgba(255,255,255,.9); border: 1px solid rgba(1,117,98,.25); }
     .btn-secundario:hover { background: rgba(255,255,255,.85); }
 
     /* ===== Cartão do formulário ===== */
     .cartao {
       position: relative;
-      background: linear-gradient(145deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.18) 100%);
+      background: linear-gradient(145deg, rgba(255,255,255,.80) 0%, rgba(255,255,255,.68) 100%);
       color: var(--texto);
-      -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
       border: 1px solid rgba(255,255,255,.45);
       border-radius: 22px; padding: 30px 26px 26px;
       box-shadow: 0 30px 70px rgba(0,0,0,.40), 0 8px 20px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.6);
-      animation: flutuarCartao 6s ease-in-out infinite;
+      --rx: 0deg; --ry: 0deg;
+      animation: flutuarCartao 7s ease-in-out infinite;
+      transition: box-shadow .3s ease;
+      will-change: transform;
+    }
+    .cartao::after {
+      content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+      box-shadow: 0 0 50px rgba(130,237,112,.22);
     }
     @keyframes flutuarCartao {
-      0%, 100% { transform: translateY(0); }
-      50%      { transform: translateY(-8px); }
+      0%, 100% { transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(0); }
+      50%      { transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-14px); }
     }
     @media (prefers-reduced-motion: reduce) { .cartao { animation: none; } }
     .cartao-topo { text-align: center; margin-bottom: 20px; }
@@ -162,7 +184,7 @@
     .entrada.area svg { top: 16px; transform: none; }
     input[type=text], input[type=email], input[type=tel], textarea {
       width: 100%; font: inherit; font-size: 1rem; color: var(--texto);
-      padding: 13px 14px 13px 42px; border: 1.5px solid var(--borda); border-radius: 10px; background: rgba(255,255,255,.7);
+      padding: 13px 14px 13px 42px; border: 1.5px solid var(--borda); border-radius: 10px; background: rgba(255,255,255,.92);
       transition: border-color .25s ease, box-shadow .25s ease;
     }
     textarea { min-height: 78px; resize: none; }
@@ -193,7 +215,7 @@
     .hora { font-size: .82rem; color: var(--texto-suave); }
     .logo-sucesso { width: 170px; max-width: 60%; display: block; margin: 0 auto 14px; }
     .validade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 14px; }
-    .validade div { background: rgba(255,255,255,.6); border: 1px solid rgba(1,117,98,.18); border-radius: 12px; padding: 10px 8px; }
+    .validade div { background: rgba(255,255,255,.9); border: 1px solid rgba(1,117,98,.18); border-radius: 12px; padding: 10px 8px; }
     .validade span { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-suave); margin-bottom: 2px; }
     .validade strong { display: block; font-size: .95rem; color: var(--gv-verde-escuro); }
 
@@ -279,7 +301,7 @@
   <div class="bg" aria-hidden="true">
     <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
     <img class="marca-dagua" src="favicon.svg" alt="" />
-    <video class="video-fundo" id="videoFundo" autoplay muted loop playsinline preload="auto" poster="capa.jpg" aria-hidden="true">
+    <video class="video-fundo" id="videoFundo" autoplay muted loop playsinline preload="auto" aria-hidden="true">
       <source src="fundo.mp4" type="video/mp4" />
     </video>
     <div class="video-veu"></div>
@@ -293,8 +315,8 @@
     <section class="tela ativa" id="telaInicio" aria-label="Boas-vindas">
       <div class="cartao boas-vindas">
         <img class="logo-cartao" src="logo-gasverde.png" alt="Gás Verde - Grupo Urca Energia" />
-        <h1>Bem-vindo à<br /><span>Gás Verde</span></h1>
-        <p>Conecte-se ao Wi-Fi de visitantes.<br />Leva menos de 1 minuto.</p>
+        <h1>Wi-Fi <span>Visitantes</span></h1>
+        <p class="sub-boas"><strong>Bem-vindo à Gás Verde!</strong><br />Conecte-se em menos de 1 minuto.</p>
         <div class="chips">
           <span class="chip">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
@@ -305,7 +327,7 @@
             Rede segura
           </span>
         </div>
-        <button class="btn btn-primario pulsar" id="btnIniciar" type="button">Acessar o Wi-Fi</button>
+        <button class="btn btn-primario pulsar btn-brilho" id="btnIniciar" type="button"><span>Acessar o Wi-Fi</span><svg class="seta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
       </div>
     </section>
 
@@ -510,6 +532,19 @@
         destino = continueUrl; /* aberto fora do Meraki (teste) */
       }
       window.location.href = destino;
+    }
+
+    // Inclinação 3D suave do cartão seguindo o mouse (só no computador)
+    if (window.matchMedia("(hover: hover) and (pointer: fine)").matches &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.addEventListener("mousemove", function (ev) {
+        var x = ev.clientX / window.innerWidth - 0.5;
+        var y = ev.clientY / window.innerHeight - 0.5;
+        document.querySelectorAll(".cartao").forEach(function (c) {
+          c.style.setProperty("--ry", (x * 6).toFixed(2) + "deg");
+          c.style.setProperty("--rx", (-y * 6).toFixed(2) + "deg");
+        });
+      });
     }
 
     $("formVisitante").addEventListener("submit", function (e) {
