@@ -17,7 +17,7 @@
       --gv-lima-escuro: #5fd04c;
       --branco: #ffffff;
       --texto: #0f2f2a;
-      --texto-suave: #2f4743;
+      --texto-suave: #1d3330;
       --borda: #d5e3df;
       --erro: #d93636;
       --raio: 12px;
@@ -131,12 +131,20 @@
 
     /* ===== Cartão do formulário ===== */
     .cartao {
-      background: rgba(255,255,255,.45); color: var(--texto);
-      -webkit-backdrop-filter: blur(8px) saturate(140%); backdrop-filter: blur(8px) saturate(140%);
-      border: 1px solid rgba(255,255,255,.55);
-      border-radius: 18px; padding: 30px 26px 26px;
-      box-shadow: 0 25px 60px rgba(0,0,0,.35);
+      position: relative;
+      background: linear-gradient(145deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.18) 100%);
+      color: var(--texto);
+      -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%);
+      border: 1px solid rgba(255,255,255,.45);
+      border-radius: 22px; padding: 30px 26px 26px;
+      box-shadow: 0 30px 70px rgba(0,0,0,.40), 0 8px 20px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.6);
+      animation: flutuarCartao 6s ease-in-out infinite;
     }
+    @keyframes flutuarCartao {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    @media (prefers-reduced-motion: reduce) { .cartao { animation: none; } }
     .cartao-topo { text-align: center; margin-bottom: 20px; }
     .cartao-topo img { width: 150px; margin-bottom: 14px; }
     .cartao-topo h2 { font-size: 1.45rem; color: var(--gv-verde); margin-bottom: 6px; }
@@ -183,6 +191,11 @@
     .barra.rodando span { animation: carregar var(--tempo, 3s) linear forwards; }
     @keyframes carregar { to { width: 100%; } }
     .hora { font-size: .82rem; color: var(--texto-suave); }
+    .logo-sucesso { width: 170px; max-width: 60%; display: block; margin: 0 auto 14px; }
+    .validade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 14px; }
+    .validade div { background: rgba(255,255,255,.6); border: 1px solid rgba(1,117,98,.18); border-radius: 12px; padding: 10px 8px; }
+    .validade span { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--texto-suave); margin-bottom: 2px; }
+    .validade strong { display: block; font-size: .95rem; color: var(--gv-verde-escuro); }
 
     /* ===== Termos (modal) ===== */
     .modal { position: fixed; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.55); }
@@ -227,7 +240,8 @@
     }
     /* Celulares bem baixos (ex.: 360x640) */
     @media (max-width: 600px) and (max-height: 700px) {
-      .cartao-topo img { display: none; }
+      .cartao-topo img { width: 130px; margin-bottom: 6px; }
+      .logo-sucesso { width: 140px; margin-bottom: 10px; }
       .campo label { display: none; }
       .divisor { margin: 10px 0 12px; }
       textarea { min-height: 46px; }
@@ -265,7 +279,7 @@
   <div class="bg" aria-hidden="true">
     <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
     <img class="marca-dagua" src="favicon.svg" alt="" />
-    <video class="video-fundo" id="videoFundo" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+    <video class="video-fundo" id="videoFundo" autoplay muted loop playsinline preload="auto" poster="capa.jpg" aria-hidden="true">
       <source src="fundo.mp4" type="video/mp4" />
     </video>
     <div class="video-veu"></div>
@@ -366,14 +380,18 @@
     <!-- TELA 3: Sucesso -->
     <section class="tela" id="telaSucesso" aria-label="Acesso liberado">
       <div class="cartao sucesso">
+        <img class="logo-sucesso" src="logo-gasverde.png" alt="Gás Verde" />
         <div class="check">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <h2 style="color:var(--gv-verde);margin-bottom:6px">Acesso liberado!</h2>
-        <p style="color:var(--texto-suave)">Olá, <strong id="primeiroNome"></strong>! Sua conexão foi autorizada.</p>
+        <p style="color:var(--texto-suave)">Olá, <strong id="primeiroNome"></strong>! Sua conexão foi autorizada por 7 dias.</p>
+        <div class="validade">
+          <div><span>Acesso liberado em</span><strong id="horaInicio"></strong></div>
+          <div><span>Válido até</span><strong id="horaFim"></strong></div>
+        </div>
         <div class="barra" id="barra"><span></span></div>
         <p class="hora" id="statusRedir">Conectando você à internet...</p>
-        <p class="hora" id="horaAcesso" style="margin-top:4px"></p>
       </div>
     </section>
 
@@ -409,7 +427,8 @@
     var CONFIG = {
       ENDPOINT_CADASTRO: "",
       URL_PADRAO_APOS_LOGIN: "https://gasverde.com.br/",
-      SEGUNDOS_ATE_LIBERAR: 3
+      SEGUNDOS_ATE_LIBERAR: 10,
+      DIAS_DE_ACESSO: 7
     };
 
     var $ = function (id) { return document.getElementById(id); };
@@ -516,12 +535,15 @@
 
       registrar(dados).then(function () {
         $("primeiroNome").textContent = dados.nome.split(" ")[0];
-        $("horaAcesso").textContent = "Acesso em " + new Date().toLocaleString("pt-BR");
+        var inicio = new Date();
+        var fim = new Date(inicio.getTime() + CONFIG.DIAS_DE_ACESSO * 24 * 60 * 60 * 1000);
+        var fmt = function (d) { return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); };
+        $("horaInicio").textContent = fmt(inicio);
+        $("horaFim").textContent = fmt(fim);
         mostrar("telaSucesso");
         var barra = $("barra");
         barra.style.setProperty("--tempo", CONFIG.SEGUNDOS_ATE_LIBERAR + "s");
         barra.classList.add("rodando");
-        if (!baseGrantUrl) $("statusRedir").textContent = "Modo de teste: página aberta fora do Wi-Fi de visitantes.";
         setTimeout(liberar, CONFIG.SEGUNDOS_ATE_LIBERAR * 1000);
       });
     });
