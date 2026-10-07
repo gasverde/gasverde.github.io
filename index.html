@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Wi-Fi Visitantes · Gás Verde</title>
+  <meta name="description" content="Portal de acesso à rede de visitantes - Gás Verde" />
+  <meta name="theme-color" content="#01493d" />
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg" />
+  <style>
+    /* ===== Cores da marca Gás Verde ===== */
+    :root {
+      --gv-verde: #017562;        /* verde escuro do logo */
+      --gv-verde-escuro: #01493d; /* fundo */
+      --gv-verde-noite: #012e27;  /* fundo mais escuro */
+      --gv-lima: #82ed70;         /* verde claro do logo (destaque) */
+      --gv-lima-escuro: #5fd04c;
+      --branco: #ffffff;
+      --texto: #0f2f2a;
+      --texto-suave: #2f4743;
+      --borda: #d5e3df;
+      --erro: #d93636;
+      --raio: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+    html { background: #012e27; }
+
+    body {
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--branco);
+      background: linear-gradient(160deg, #01493d 0%, #012e27 100%) fixed;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== Fundo animado (leve, sem vídeo pesado) ===== */
+    .bg {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden;
+      background:
+        radial-gradient(1200px 800px at 85% -10%, rgba(130,237,112,.18), transparent 60%),
+        radial-gradient(900px 700px at -10% 110%, rgba(1,117,98,.55), transparent 60%),
+        linear-gradient(160deg, var(--gv-verde-escuro) 0%, var(--gv-verde-noite) 100%);
+    }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(60px); opacity: .45;
+      animation: flutuar 18s ease-in-out infinite alternate;
+    }
+    .blob.b1 { width: 420px; height: 420px; background: var(--gv-verde); top: -120px; left: -80px; }
+    .blob.b2 { width: 340px; height: 340px; background: var(--gv-lima); bottom: -140px; right: -60px; opacity: .22; animation-duration: 22s; }
+    .blob.b3 { width: 260px; height: 260px; background: #02a184; top: 40%; left: 55%; opacity: .25; animation-duration: 26s; }
+    @keyframes flutuar {
+      0%   { transform: translate(0,0) scale(1); }
+      100% { transform: translate(60px,40px) scale(1.15); }
+    }
+    /* Vídeo de fundo (mudo, em loop). Se o arquivo não existir, fica o fundo verde animado. */
+    .video-fundo {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0; transition: opacity 1s ease;
+    }
+    .video-fundo.pronto { opacity: 1; }
+    .video-veu {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(1,46,39,.35) 0%, rgba(1,46,39,.55) 100%);
+    }
+    /* Símbolo da marca em marca d'água */
+    .marca-dagua {
+      position: absolute; right: -80px; bottom: -60px; width: 520px; opacity: .06;
+      pointer-events: none;
+    }
+    @media (prefers-reduced-motion: reduce) { .blob { animation: none; } }
+
+    /* ===== Layout ===== */
+    .wrap {
+      position: relative; z-index: 1;
+      min-height: 100vh; min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 16px 24px;
+      gap: 28px;
+    }
+
+    .logo-topo { width: 220px; max-width: 70vw; animation: entrar .6s ease both; }
+
+    .tela { width: 100%; max-width: 440px; display: none; animation: entrar .5s ease both; }
+    .tela.ativa { display: block; }
+    @keyframes entrar { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+    /* ===== Tela inicial ===== */
+    .boas-vindas { text-align: center; }
+    .boas-vindas h1 {
+      font-size: clamp(2.2rem, 7vw, 3rem); font-weight: 700; letter-spacing: -.02em; margin-bottom: 10px;
+    }
+    .boas-vindas h1 { color: var(--texto); }
+    .boas-vindas h1 span { color: var(--gv-verde); }
+    .boas-vindas .logo-cartao { width: 230px; max-width: 70%; margin: 0 auto 22px; display: block; }
+    .boas-vindas p { color: var(--texto-suave); font-size: 1.05rem; margin-bottom: 34px; line-height: 1.5; }
+
+    .chips { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 12px; border-radius: 999px; font-size: .85rem;
+      background: rgba(1,117,98,.08); border: 1px solid rgba(1,117,98,.22); color: var(--gv-verde);
+    }
+    .chip svg { width: 15px; height: 15px; }
+
+    /* ===== Botões ===== */
+    .btn {
+      width: 100%; border: 0; cursor: pointer; font: inherit;
+      padding: 15px 18px; border-radius: var(--raio);
+      font-size: 1.05rem; font-weight: 700; letter-spacing: .01em;
+      transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn-primario {
+      background: var(--gv-verde); color: #fff;
+      box-shadow: 0 10px 24px rgba(1,117,98,.32);
+    }
+    .btn-primario:hover { background: #015d4e; }
+    .btn-primario:active { transform: scale(.98); }
+    .btn-primario:disabled { opacity: .7; cursor: wait; }
+    .pulsar { animation: pulsar 2.4s ease-in-out infinite; }
+    @keyframes pulsar { 0%,100% { box-shadow: 0 10px 24px rgba(1,117,98,.32); } 50% { box-shadow: 0 10px 34px rgba(130,237,112,.75); } }
+
+    .btn-secundario {
+      background: transparent; color: var(--texto-suave); border: 1.5px solid var(--borda);
+      margin-top: 10px; font-weight: 600;
+    }
+    .btn-secundario { background: rgba(255,255,255,.5); }
+    .btn-secundario:hover { background: rgba(255,255,255,.85); }
+
+    /* ===== Cartão do formulário ===== */
+    .cartao {
+      background: rgba(255,255,255,.45); color: var(--texto);
+      -webkit-backdrop-filter: blur(8px) saturate(140%); backdrop-filter: blur(8px) saturate(140%);
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 18px; padding: 30px 26px 26px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.35);
+    }
+    .cartao-topo { text-align: center; margin-bottom: 20px; }
+    .cartao-topo img { width: 150px; margin-bottom: 14px; }
+    .cartao-topo h2 { font-size: 1.45rem; color: var(--gv-verde); margin-bottom: 6px; }
+    .cartao-topo p { color: var(--texto-suave); font-size: .95rem; }
+    .divisor { height: 1px; background: var(--borda); margin: 18px 0 20px; }
+
+    .campo { margin-bottom: 15px; }
+    .campo label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 6px; color: var(--texto); }
+    .campo .opcional { font-weight: 400; color: var(--texto-suave); }
+    .entrada { position: relative; }
+    .entrada svg {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      width: 18px; height: 18px; color: var(--gv-verde); pointer-events: none;
+    }
+    .entrada.area svg { top: 16px; transform: none; }
+    input[type=text], input[type=email], input[type=tel], textarea {
+      width: 100%; font: inherit; font-size: 1rem; color: var(--texto);
+      padding: 13px 14px 13px 42px; border: 1.5px solid var(--borda); border-radius: 10px; background: rgba(255,255,255,.7);
+      transition: border-color .25s ease, box-shadow .25s ease;
+    }
+    textarea { min-height: 78px; resize: none; }
+    input:focus, textarea:focus { outline: none; border-color: var(--gv-verde); box-shadow: 0 0 0 4px rgba(1,117,98,.14); }
+    .invalido input, .invalido textarea { border-color: var(--erro); }
+    .msg-erro { display: none; color: var(--erro); font-size: .8rem; margin-top: 5px; }
+    .invalido .msg-erro { display: block; }
+
+    .consentimento { display: flex; gap: 10px; align-items: flex-start; font-size: .85rem; color: var(--texto-suave); line-height: 1.45; margin: 6px 0 18px; }
+    .consentimento input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--gv-verde); flex: 0 0 auto; }
+    .consentimento a { color: var(--gv-verde); font-weight: 600; }
+    .consentimento.invalido { color: var(--erro); }
+
+    .cartao .btn-primario { background: var(--gv-verde); color: #fff; box-shadow: 0 10px 22px rgba(1,117,98,.3); }
+    .cartao .btn-primario:hover { background: #015d4e; }
+
+    /* ===== Sucesso ===== */
+    .sucesso { text-align: center; }
+    .check {
+      width: 76px; height: 76px; border-radius: 50%; margin: 4px auto 18px;
+      background: rgba(130,237,112,.18); display: grid; place-items: center;
+    }
+    .check svg { width: 40px; height: 40px; color: var(--gv-verde); }
+    .barra { height: 6px; background: #e7f0ed; border-radius: 99px; overflow: hidden; margin: 20px 0 8px; }
+    .barra span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gv-verde), var(--gv-lima)); }
+    .barra.rodando span { animation: carregar var(--tempo, 3s) linear forwards; }
+    @keyframes carregar { to { width: 100%; } }
+    .hora { font-size: .82rem; color: var(--texto-suave); }
+
+    /* ===== Termos (modal) ===== */
+    .modal { position: fixed; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.55); }
+    .modal.aberto { display: flex; }
+    .modal-caixa { background: #fff; color: var(--texto); border-radius: 16px; max-width: 520px; width: 100%; max-height: 85vh; overflow: auto; padding: 24px; }
+    .modal-caixa h3 { color: var(--gv-verde); margin-bottom: 12px; }
+    .modal-caixa p, .modal-caixa li { font-size: .9rem; line-height: 1.55; color: #34504b; margin-bottom: 8px; }
+    .modal-caixa ul { padding-left: 18px; margin-bottom: 10px; }
+
+    /* Tela de carregamento (enquanto o vídeo carrega) */
+    .carregando { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: var(--gv-verde-noite); transition: opacity .6s ease; }
+    .carregando.sumir { opacity: 0; pointer-events: none; }
+    .spinner { width: 46px; height: 46px; border-radius: 50%; border: 4px solid rgba(130,237,112,.25); border-top-color: var(--gv-lima); animation: girar 1s linear infinite; }
+    @keyframes girar { to { transform: rotate(360deg); } }
+
+    footer { color: rgba(255,255,255,.85); text-shadow: 0 1px 3px rgba(0,0,0,.5); font-size: .8rem; text-align: center; }
+
+    /* ===== Celular: tudo mais compacto para caber na tela ===== */
+    @media (max-width: 600px) {
+      .wrap { padding: 16px 12px 14px; gap: 14px; justify-content: flex-start; }
+      .tela#telaInicio, .tela#telaSucesso { margin-top: auto; }
+      footer { margin-bottom: auto; }
+      .cartao { padding: 20px 18px 18px; border-radius: 16px; }
+      .cartao-topo { margin-bottom: 10px; }
+      .cartao-topo img { width: 118px; margin-bottom: 8px; }
+      .cartao-topo h2 { font-size: 1.2rem; margin-bottom: 2px; }
+      .cartao-topo p { font-size: .88rem; }
+      .divisor { margin: 12px 0 14px; }
+      .campo { margin-bottom: 10px; }
+      .campo label { font-size: .8rem; margin-bottom: 4px; }
+      input[type=text], input[type=email], input[type=tel], textarea { padding: 11px 12px 11px 40px; font-size: 16px; }
+      textarea { min-height: 54px; }
+      .entrada.area svg { top: 13px; }
+      .consentimento { font-size: .8rem; margin: 4px 0 12px; }
+      .btn { padding: 13px 16px; font-size: 1rem; }
+      .btn-secundario { margin-top: 8px; }
+      .boas-vindas .logo-cartao { width: 190px; margin-bottom: 16px; }
+      .boas-vindas h1 { font-size: 2rem; }
+      .boas-vindas p { margin-bottom: 22px; font-size: 1rem; }
+      .chips { margin-bottom: 22px; }
+      footer { font-size: .72rem; }
+    }
+    /* Celulares bem baixos (ex.: 360x640) */
+    @media (max-width: 600px) and (max-height: 700px) {
+      .cartao-topo img { display: none; }
+      .campo label { display: none; }
+      .divisor { margin: 10px 0 12px; }
+      textarea { min-height: 46px; }
+    }
+
+    /* ===== Computador: cartão mais largo e formulário em 2 colunas ===== */
+    @media (min-width: 900px) {
+      .wrap { padding: 28px 24px; gap: 18px; }
+      #telaInicio { max-width: 560px; }
+      .boas-vindas { padding: 40px 48px 36px; }
+      .boas-vindas h1 { font-size: 2.6rem; }
+      #telaForm, #telaSucesso { max-width: 760px; }
+      #telaSucesso { max-width: 520px; }
+      .cartao { padding: 28px 40px 26px; }
+      .cartao-topo { display: flex; align-items: center; gap: 20px; text-align: left; margin-bottom: 0; }
+      .cartao-topo img { width: 150px; margin: 0; }
+      .cartao-topo h2 { font-size: 1.5rem; }
+      #formVisitante { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
+      .campo-largo { grid-column: 1 / -1; }
+      textarea { min-height: 60px; }
+      .acoes { grid-column: 1 / -1; display: flex; flex-direction: row-reverse; gap: 12px; }
+      .acoes .btn-primario { flex: 2; }
+      .acoes .btn-secundario { flex: 1; margin-top: 0; }
+    }
+    /* Telas de notebook mais baixas */
+    @media (min-width: 900px) and (max-height: 720px) {
+      .cartao { padding: 20px 36px 20px; }
+      .divisor { margin: 12px 0 14px; }
+      .campo { margin-bottom: 10px; }
+      textarea { min-height: 46px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <img class="marca-dagua" src="images/favicon.svg" alt="" />
+    <video class="video-fundo" id="videoFundo" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+      <source src="videos/fundo.mp4" type="video/mp4" />
+    </video>
+    <div class="video-veu"></div>
+  </div>
+
+  <div class="carregando" id="carregando" aria-hidden="true"><div class="spinner"></div></div>
+
+  <main class="wrap">
+
+    <!-- TELA 1: Boas-vindas -->
+    <section class="tela ativa" id="telaInicio" aria-label="Boas-vindas">
+      <div class="cartao boas-vindas">
+        <img class="logo-cartao" src="images/logo-gasverde.png" alt="Gás Verde - Grupo Urca Energia" />
+        <h1>Bem-vindo à<br /><span>Gás Verde</span></h1>
+        <p>Conecte-se ao Wi-Fi de visitantes.<br />Leva menos de 1 minuto.</p>
+        <div class="chips">
+          <span class="chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            Internet gratuita
+          </span>
+          <span class="chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Rede segura
+          </span>
+        </div>
+        <button class="btn btn-primario pulsar" id="btnIniciar" type="button">Acessar o Wi-Fi</button>
+      </div>
+    </section>
+
+    <!-- TELA 2: Formulário -->
+    <section class="tela" id="telaForm" aria-label="Cadastro de visitante">
+      <div class="cartao">
+        <div class="cartao-topo">
+          <img src="images/logo-gasverde.png" alt="Gás Verde" />
+          <h2>Acesso à Rede</h2>
+          <p>Preencha seus dados para continuar</p>
+        </div>
+        <div class="divisor"></div>
+
+        <form id="formVisitante" novalidate>
+          <div class="campo" data-campo="nome">
+            <label for="nome">Nome completo</label>
+            <div class="entrada">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" id="nome" name="nome" placeholder="Digite seu nome" autocomplete="name" maxlength="120" />
+            </div>
+            <div class="msg-erro">Informe seu nome completo</div>
+          </div>
+
+          <div class="campo" data-campo="email">
+            <label for="email">E-mail</label>
+            <div class="entrada">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+              <input type="email" id="email" name="email" placeholder="seu.email@empresa.com" autocomplete="email" maxlength="120" />
+            </div>
+            <div class="msg-erro">Informe um e-mail válido</div>
+          </div>
+
+          <div class="campo" data-campo="telefone">
+            <label for="telefone">Telefone</label>
+            <div class="entrada">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <input type="tel" id="telefone" name="telefone" placeholder="(21) 99999-9999" autocomplete="tel" inputmode="numeric" maxlength="15" />
+            </div>
+            <div class="msg-erro">Informe um telefone com DDD</div>
+          </div>
+
+          <div class="campo" data-campo="empresa">
+            <label for="empresa">Empresa</label>
+            <div class="entrada">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <input type="text" id="empresa" name="empresa" placeholder="Nome da sua empresa" autocomplete="organization" maxlength="120" />
+            </div>
+            <div class="msg-erro">Informe sua empresa</div>
+          </div>
+
+          <div class="campo campo-largo" data-campo="motivo">
+            <label for="motivo">Motivo da visita <span class="opcional">(opcional)</span></label>
+            <div class="entrada area">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <textarea id="motivo" name="motivo" placeholder="Ex.: reunião, manutenção, entrega..." maxlength="300"></textarea>
+            </div>
+          </div>
+
+          <label class="consentimento campo-largo" id="blocoConsentimento">
+            <input type="checkbox" id="aceite" />
+            <span>Li e aceito os <a href="#" id="abrirTermos">Termos de Uso e a Política de Privacidade</a> da rede de visitantes.</span>
+          </label>
+
+          <div class="acoes">
+            <button type="submit" class="btn btn-primario" id="btnEnviar">Conectar</button>
+            <button type="button" class="btn btn-secundario" id="btnVoltar">Voltar</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TELA 3: Sucesso -->
+    <section class="tela" id="telaSucesso" aria-label="Acesso liberado">
+      <div class="cartao sucesso">
+        <div class="check">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2 style="color:var(--gv-verde);margin-bottom:6px">Acesso liberado!</h2>
+        <p style="color:var(--texto-suave)">Olá, <strong id="primeiroNome"></strong>! Sua conexão foi autorizada.</p>
+        <div class="barra" id="barra"><span></span></div>
+        <p class="hora" id="statusRedir">Conectando você à internet...</p>
+        <p class="hora" id="horaAcesso" style="margin-top:4px"></p>
+      </div>
+    </section>
+
+    <footer>© <span id="ano"></span> Gás Verde · Grupo Urca Energia · Rede de visitantes</footer>
+  </main>
+
+  <!-- Termos de uso -->
+  <div class="modal" id="modalTermos" role="dialog" aria-modal="true" aria-labelledby="tituloTermos">
+    <div class="modal-caixa">
+      <h3 id="tituloTermos">Termos de Uso e Privacidade</h3>
+      <p>Ao utilizar a rede Wi-Fi de visitantes da Gás Verde, você concorda com as condições abaixo:</p>
+      <ul>
+        <li>A rede é oferecida gratuitamente, apenas para acesso à internet, sem garantia de disponibilidade ou velocidade.</li>
+        <li>É proibido usar a rede para atividades ilegais, acesso a conteúdo impróprio ou tentativas de acesso a sistemas internos da empresa.</li>
+        <li>O acesso pode ser monitorado e registrado (data, hora e identificação do dispositivo) para fins de segurança, conforme o Marco Civil da Internet (Lei 12.965/2014).</li>
+        <li>Seus dados (nome, e-mail, telefone e empresa) são usados apenas para controle de acesso de visitantes e segurança, não são compartilhados com terceiros e são tratados conforme a LGPD (Lei 13.709/2018).</li>
+        <li>Para solicitar acesso, correção ou exclusão dos seus dados, procure a recepção ou o setor de TI da unidade.</li>
+      </ul>
+      <button class="btn btn-primario" type="button" id="fecharTermos" style="background:var(--gv-verde);color:#fff;box-shadow:none">Entendi</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    /* =========================================================
+       CONFIGURAÇÃO
+       ---------------------------------------------------------
+       ENDPOINT_CADASTRO: URL que recebe os dados do visitante
+       (ex.: Google Apps Script, Power Automate, API interna).
+       Deixe vazio ("") para apenas liberar o acesso, sem gravar.
+       Lembre de liberar esse domínio no Walled Garden do Meraki.
+       ========================================================= */
+    var CONFIG = {
+      ENDPOINT_CADASTRO: "",
+      URL_PADRAO_APOS_LOGIN: "https://gasverde.com.br/",
+      SEGUNDOS_ATE_LIBERAR: 3
+    };
+
+    var $ = function (id) { return document.getElementById(id); };
+    var params = new URLSearchParams(window.location.search);
+
+    /* Parâmetros enviados pelo Meraki (Click-through com Custom splash URL) */
+    var baseGrantUrl = params.get("base_grant_url");
+    var continueUrl = params.get("user_continue_url") || CONFIG.URL_PADRAO_APOS_LOGIN;
+
+    $("ano").textContent = new Date().getFullYear();
+
+    /* Vídeo de fundo: aparece só quando carregar; garante sem áudio */
+    var video = $("videoFundo");
+    video.muted = true; video.volume = 0;
+    function tirarCarregando() { $("carregando").classList.add("sumir"); }
+    video.addEventListener("canplay", function () { video.classList.add("pronto"); tirarCarregando(); var p = video.play(); if (p && p.catch) p.catch(function () {}); });
+    video.addEventListener("error", tirarCarregando, true);
+    setTimeout(tirarCarregando, 4000); /* não segura o visitante se o vídeo demorar */
+
+    function mostrar(idTela) {
+      ["telaInicio", "telaForm", "telaSucesso"].forEach(function (t) {
+        $(t).classList.toggle("ativa", t === idTela);
+      });
+      window.scrollTo(0, 0);
+    }
+
+    $("btnIniciar").addEventListener("click", function () { mostrar("telaForm"); $("nome").focus(); });
+    $("btnVoltar").addEventListener("click", function () { mostrar("telaInicio"); });
+
+    /* Máscara de telefone (99) 99999-9999 */
+    $("telefone").addEventListener("input", function (e) {
+      var d = e.target.value.replace(/\D/g, "").slice(0, 11);
+      var f = d;
+      if (d.length > 2) f = "(" + d.slice(0, 2) + ") " + d.slice(2);
+      if (d.length > 7) f = "(" + d.slice(0, 2) + ") " + d.slice(2, d.length - 4) + "-" + d.slice(-4);
+      e.target.value = f;
+    });
+
+    /* Termos */
+    $("abrirTermos").addEventListener("click", function (e) { e.preventDefault(); $("modalTermos").classList.add("aberto"); });
+    $("fecharTermos").addEventListener("click", function () { $("modalTermos").classList.remove("aberto"); });
+    $("modalTermos").addEventListener("click", function (e) { if (e.target.id === "modalTermos") e.currentTarget.classList.remove("aberto"); });
+
+    /* Limpa erro ao digitar */
+    document.querySelectorAll(".campo input, .campo textarea").forEach(function (el) {
+      el.addEventListener("input", function () { el.closest(".campo").classList.remove("invalido"); });
+    });
+    $("aceite").addEventListener("change", function () { $("blocoConsentimento").classList.remove("invalido"); });
+
+    function validar(d) {
+      var ok = true;
+      function erro(campo) { document.querySelector('[data-campo="' + campo + '"]').classList.add("invalido"); ok = false; }
+      if (d.nome.split(" ").filter(Boolean).length < 2) erro("nome");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email)) erro("email");
+      if (d.telefone.replace(/\D/g, "").length < 10) erro("telefone");
+      if (d.empresa.length < 2) erro("empresa");
+      if (!$("aceite").checked) { $("blocoConsentimento").classList.add("invalido"); ok = false; }
+      return ok;
+    }
+
+    /* Envia o cadastro (se configurado) sem travar a liberação */
+    function registrar(dados) {
+      if (!CONFIG.ENDPOINT_CADASTRO) return Promise.resolve();
+      var corpo = JSON.stringify(dados);
+      var envio = fetch(CONFIG.ENDPOINT_CADASTRO, {
+        method: "POST", mode: "no-cors", keepalive: true,
+        headers: { "Content-Type": "text/plain;charset=utf-8" }, body: corpo
+      }).catch(function () {});
+      var limite = new Promise(function (r) { setTimeout(r, 3000); });
+      return Promise.race([envio, limite]);
+    }
+
+    function liberar() {
+      var destino;
+      if (baseGrantUrl) {
+        destino = baseGrantUrl + (baseGrantUrl.indexOf("?") >= 0 ? "&" : "?") +
+                  "continue_url=" + encodeURIComponent(continueUrl);
+      } else {
+        destino = continueUrl; /* aberto fora do Meraki (teste) */
+      }
+      window.location.href = destino;
+    }
+
+    $("formVisitante").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var dados = {
+        nome: $("nome").value.trim(),
+        email: $("email").value.trim(),
+        telefone: $("telefone").value.trim(),
+        empresa: $("empresa").value.trim(),
+        motivo: $("motivo").value.trim()
+      };
+      if (!validar(dados)) return;
+
+      dados.aceite_termos = true;
+      dados.data_hora = new Date().toISOString();
+      dados.client_mac = params.get("client_mac") || "";
+      dados.client_ip = params.get("client_ip") || "";
+      dados.ap_mac = params.get("node_mac") || "";
+      dados.unidade = "Seropédica";
+
+      var btn = $("btnEnviar");
+      btn.disabled = true; btn.textContent = "Conectando...";
+
+      registrar(dados).then(function () {
+        $("primeiroNome").textContent = dados.nome.split(" ")[0];
+        $("horaAcesso").textContent = "Acesso em " + new Date().toLocaleString("pt-BR");
+        mostrar("telaSucesso");
+        var barra = $("barra");
+        barra.style.setProperty("--tempo", CONFIG.SEGUNDOS_ATE_LIBERAR + "s");
+        barra.classList.add("rodando");
+        if (!baseGrantUrl) $("statusRedir").textContent = "Modo de teste: página aberta fora do Wi-Fi de visitantes.";
+        setTimeout(liberar, CONFIG.SEGUNDOS_ATE_LIBERAR * 1000);
+      });
+    });
+  })();
+  </script>
+</body>
+</html>
