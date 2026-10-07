@@ -147,7 +147,7 @@
     /* ===== Cartão do formulário ===== */
     .cartao {
       position: relative;
-      background: linear-gradient(145deg, rgba(255,255,255,.80) 0%, rgba(255,255,255,.68) 100%);
+      background: linear-gradient(145deg, rgba(255,255,255,.66) 0%, rgba(255,255,255,.50) 100%);
       color: var(--texto);
       -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
       border: 1px solid rgba(255,255,255,.45);
@@ -259,6 +259,25 @@
       .boas-vindas p { margin-bottom: 22px; font-size: 1rem; }
       .chips { margin-bottom: 22px; }
       footer { font-size: .72rem; }
+
+      /* Formulário compacto no celular: deixa o vídeo aparecer em volta */
+      #telaForm { margin: auto 0; padding: 0 8px; }
+      #telaForm .cartao { padding: 14px 14px 14px; }
+      #telaForm .cartao-topo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 0; }
+      #telaForm .cartao-topo img { width: 84px; margin: 0; }
+      #telaForm .cartao-topo h2 { font-size: 1.1rem; margin: 0; }
+      #telaForm .cartao-topo p { display: none; }
+      #telaForm .divisor { margin: 10px 0 10px; }
+      #telaForm .campo { margin-bottom: 8px; }
+      #telaForm .campo label { display: none; }
+      #telaForm input[type=text], #telaForm input[type=email], #telaForm input[type=tel], #telaForm textarea { padding: 9px 12px 9px 38px; }
+      #telaForm textarea { min-height: 40px; height: 40px; }
+      #telaForm .entrada.area svg { top: 11px; }
+      #telaForm .consentimento { font-size: .76rem; margin: 2px 0 10px; line-height: 1.35; }
+      #telaForm .acoes { display: flex; flex-direction: row-reverse; gap: 8px; }
+      #telaForm .acoes .btn { padding: 11px 12px; }
+      #telaForm .acoes .btn-primario { flex: 2; }
+      #telaForm .acoes .btn-secundario { flex: 1; margin-top: 0; }
     }
     /* Celulares bem baixos (ex.: 360x640) */
     @media (max-width: 600px) and (max-height: 700px) {
@@ -346,7 +365,7 @@
             <label for="nome">Nome completo</label>
             <div class="entrada">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <input type="text" id="nome" name="nome" placeholder="Digite seu nome" autocomplete="name" maxlength="120" />
+              <input type="text" id="nome" name="nome" placeholder="Nome completo" autocomplete="name" maxlength="120" />
             </div>
             <div class="msg-erro">Informe seu nome completo</div>
           </div>
@@ -355,7 +374,7 @@
             <label for="email">E-mail</label>
             <div class="entrada">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
-              <input type="email" id="email" name="email" placeholder="seu.email@empresa.com" autocomplete="email" maxlength="120" />
+              <input type="email" id="email" name="email" placeholder="E-mail" autocomplete="email" maxlength="120" />
             </div>
             <div class="msg-erro">Informe um e-mail válido</div>
           </div>
@@ -364,7 +383,7 @@
             <label for="telefone">Telefone</label>
             <div class="entrada">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <input type="tel" id="telefone" name="telefone" placeholder="(21) 99999-9999" autocomplete="tel" inputmode="numeric" maxlength="15" />
+              <input type="tel" id="telefone" name="telefone" placeholder="Telefone (21) 99999-9999" autocomplete="tel" inputmode="numeric" maxlength="15" />
             </div>
             <div class="msg-erro">Informe um telefone com DDD</div>
           </div>
@@ -373,7 +392,7 @@
             <label for="empresa">Empresa</label>
             <div class="entrada">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              <input type="text" id="empresa" name="empresa" placeholder="Nome da sua empresa" autocomplete="organization" maxlength="120" />
+              <input type="text" id="empresa" name="empresa" placeholder="Empresa" autocomplete="organization" maxlength="120" />
             </div>
             <div class="msg-erro">Informe sua empresa</div>
           </div>
@@ -382,7 +401,7 @@
             <label for="motivo">Motivo da visita <span class="opcional">(opcional)</span></label>
             <div class="entrada area">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <textarea id="motivo" name="motivo" placeholder="Ex.: reunião, manutenção, entrega..." maxlength="300"></textarea>
+              <textarea id="motivo" name="motivo" placeholder="Motivo da visita (opcional)" maxlength="300"></textarea>
             </div>
           </div>
 
